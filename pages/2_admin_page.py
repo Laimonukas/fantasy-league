@@ -5,7 +5,7 @@ from datetime import datetime
 
 if "logged_in" not in st.session_state or ("is_admin" not in st.session_state or st.session_state["is_admin"] is False):
     st.warning("You are not logged in or unauthorized to use this")
-    st.page_link("pages\\1_login_page.py")
+    st.page_link("pages/1_login_page.py")
 else:
     st.header("Admin page")
     user_tab, event_tab, session_state_tab = st.tabs(["User data", "Event data", "Session State"])
