@@ -14,6 +14,7 @@ import scripts.helper_functions as hp
 
 def main():
     st.header("Login page")
+    st.text(os.path.abspath("data/logins.csv"))
     if "logged_in" not in st.session_state:
         login_df = hp.read_login(os.path.abspath("data/logins.csv"))
 

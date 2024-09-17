@@ -2,3 +2,5 @@
 /League/
 /.idea/
 /__pycache__/
+*.ps1
+match_data.csv

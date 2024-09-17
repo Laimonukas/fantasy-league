@@ -65,3 +65,10 @@ def read_players(abs_path: str):
                                          "support": pl.String,
                                          "eliminated": pl.Boolean})
     return players_df
+
+
+def return_match_data(abs_path: str) -> pl.DataFrame:
+    if not os.path.isfile(abs_path):
+        return None
+    else:
+        return pl.read_csv(source=abs_path)

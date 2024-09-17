@@ -10,7 +10,10 @@ if "logged_in" not in st.session_state or ("is_admin" not in st.session_state or
 else:
     st.header(f"Admin page - {st.session_state['name']}")
     login_df = hp.read_login(os.path.abspath("data/logins.csv"))
-    user_tab, event_tab, session_state_tab = st.tabs(["User data", "Event data", "Session State"])
+    user_tab, event_tab, session_state_tab, match_data_tab = st.tabs(["User data",
+                                                                      "Event data",
+                                                                      "Session State",
+                                                                      "Match data"])
 
     with user_tab:
         st.subheader("User data")
@@ -120,3 +123,18 @@ else:
 
     with session_state_tab:
         st.session_state
+
+    with match_data_tab:
+        match_df = hp.return_match_data(os.path.abspath("data/match_data.csv"))
+        if match_df is None:
+            st.warning("No match data found, upload it.")
+            uploaded_file = st.file_uploader(label="Upload missing match data",
+                                             type="csv",
+                                             accept_multiple_files=False,
+                                             key="missing_file_upload")
+            if uploaded_file is not None:
+                match_df = pl.read_csv(uploaded_file)
+                match_df.write_csv("data/match_data.csv")
+                st.rerun()
+        else:
+            st.data_editor(match_df)
