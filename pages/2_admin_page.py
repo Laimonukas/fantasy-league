@@ -8,7 +8,7 @@ if "logged_in" not in st.session_state or ("is_admin" not in st.session_state or
     st.warning("You are not logged in or unauthorized to use this")
     st.page_link("pages/1_login_page.py")
 else:
-    st.header(f"Admin page - {st.session_state["name"]}")
+    st.header(f"Admin page - {st.session_state['name']}")
     login_df = hp.read_login(os.path.abspath("data/logins.csv"))
     user_tab, event_tab, session_state_tab = st.tabs(["User data", "Event data", "Session State"])
 
