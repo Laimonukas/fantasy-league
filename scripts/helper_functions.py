@@ -2,7 +2,7 @@ import datetime
 import hashlib
 import os
 import polars as pl
-
+import json
 
 def return_hash(x: object) -> str:
     hash_object = hashlib.md5(str(x).encode())
@@ -49,20 +49,20 @@ def read_players(abs_path: str):
         players_df = pl.DataFrame(data=[],
                                   schema={"team": pl.String,
                                           "top": pl.String,
-                                          "jungle": pl.String,
+                                          "jng": pl.String,
                                           "mid": pl.String,
-                                          "adc": pl.String,
-                                          "support": pl.String,
+                                          "bot": pl.String,
+                                          "sup": pl.String,
                                           "eliminated": pl.Boolean})
         players_df.write_csv(file=abs_path)
     else:
         players_df = pl.read_csv(source=abs_path,
                                  schema={"team": pl.String,
                                          "top": pl.String,
-                                         "jungle": pl.String,
+                                         "jng": pl.String,
                                          "mid": pl.String,
-                                         "adc": pl.String,
-                                         "support": pl.String,
+                                         "bot": pl.String,
+                                         "sup": pl.String,
                                          "eliminated": pl.Boolean})
     return players_df
 
@@ -72,3 +72,45 @@ def return_match_data(abs_path: str) -> pl.DataFrame:
         return None
     else:
         return pl.read_csv(source=abs_path)
+
+
+def return_settings_data(abs_path: str) -> dict:
+    if not os.path.isfile(abs_path):
+        return None
+    else:
+        with open(abs_path) as json_file:
+            return json.load(json_file)
+
+
+def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
+    player_df = df.filter(pl.col("playername") is not None)
+
+    performance_df = pl.DataFrame(data=[],
+                                  schema={"gameid": pl.String,
+                                          "date": pl.String,
+                                          "playername": pl.String,
+                                          "performance": pl.Float64})
+
+    for row in player_df.rows(named=True):
+        if row["playername"] is None:
+            continue
+        performance_score = 0
+        for key, value in multipliers["base"].items():
+            performance_score += row[key] * value
+        performance_score = round(performance_score, 2)
+
+        if row["position"] =="sup":
+            for key, value in multipliers["extra"]["sup"].items():
+                performance_score += row[key] * value
+
+        new_row = pl.DataFrame(data=[[row["gameid"],
+                                      row["date"],
+                                      row["playername"],
+                                      performance_score]],
+                               schema={"gameid": pl.String,
+                                       "date": pl.String,
+                                       "playername": pl.String,
+                                       "performance": pl.Float64})
+        performance_df = performance_df.vstack(new_row)
+
+    return performance_df

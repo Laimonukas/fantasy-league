@@ -60,6 +60,8 @@ else:
     with event_tab:
         st.subheader("Event Data")
         schedule_df = hp.read_schedule(os.path.abspath("data/schedule.csv"))
+        settings_json = hp.return_settings_data(os.path.abspath("data/settings.json"))
+
         basic_event_tab, weeks_event_tab, players_event_tab = st.tabs(["Basic", "Weeks", "Players"])
         with basic_event_tab:
             st.page_link(label="Main Wiki", page="https://lol.fandom.com/wiki/2024_Season_World_Championship")
@@ -122,7 +124,14 @@ else:
                 st.rerun()
 
     with session_state_tab:
+        st.subheader("Session state:")
         st.session_state
+
+        st.subheader("Settings:")
+        if settings_json is not None:
+            st.json(settings_json)
+        else:
+            st.warning("JSON settings missing")
 
     with match_data_tab:
         match_df = hp.return_match_data(os.path.abspath("data/match_data.csv"))
@@ -134,7 +143,38 @@ else:
                                              key="missing_file_upload")
             if uploaded_file is not None:
                 match_df = pl.read_csv(uploaded_file)
+                match_df = match_df.filter(pl.col("league") == settings_json["event_name"])
+                match_df = match_df.filter(pl.col("patch") == settings_json["patch"])
+                match_df = match_df[settings_json["needed_columns"]]
                 match_df.write_csv("data/match_data.csv")
+                uploaded_file = None
                 st.rerun()
         else:
-            st.data_editor(match_df)
+            basic_match_data_tab, filter_match_data_tab = st.tabs(["Basic/update", "Filter"])
+
+            with basic_match_data_tab:
+                st.data_editor(match_df)
+                uploaded_file = st.file_uploader(label="Update data",
+                                                 type="csv",
+                                                 accept_multiple_files=False,
+                                                 key=f"update_file_upload")
+                if uploaded_file is not None:
+                    match_df = pl.read_csv(uploaded_file)
+                    match_df = match_df.filter(pl.col("league") == settings_json["event_name"])
+                    match_df = match_df.filter(pl.col("patch") == settings_json["patch"])
+                    match_df = match_df[settings_json["needed_columns"]]
+
+                    match_df.write_csv("data/match_data.csv")
+
+            with filter_match_data_tab:
+                all_columns = match_df.columns
+                filter_column = st.selectbox(label="Filter on column:",
+                                             options=all_columns)
+
+                all_options = match_df[filter_column].unique(maintain_order=True).to_list()
+                filter_choice = st.selectbox(label="Selection:",
+                                             options=all_options)
+                st.dataframe(match_df.filter(pl.col(filter_column) == filter_choice))
+                st.subheader("Performance")
+                st.dataframe(hp.calculate_performance(match_df.filter(pl.col(filter_column) == filter_choice),
+                                                      settings_json["multipliers"]))
