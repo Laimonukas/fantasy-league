@@ -95,11 +95,11 @@ else:
             schedule_start_date = st.date_input(label="Start date",
                                                 min_value=datetime.strptime(min_start_date,
                                                                             "%Y-%m-%d"),
-                                                max_value=datetime.strptime("2024-11-02", "%Y-%m-%d"))
+                                                max_value=datetime.strptime("2024-11-03", "%Y-%m-%d"))
 
             schedule_end_date = st.date_input(label="End date",
                                               min_value=schedule_start_date,
-                                              max_value=datetime.strptime("2024-11-02", "%Y-%m-%d"))
+                                              max_value=datetime.strptime("2024-11-03", "%Y-%m-%d"))
 
             if st.button("Add event"):
                 new_df = pl.DataFrame(data=[[stage_selection,
@@ -116,12 +116,38 @@ else:
                 st.rerun()
 
         with players_event_tab:
-            players_df = hp.read_players(os.path.abspath("data/players.csv"))
-            players_df = st.data_editor(players_df, num_rows="dynamic")
+            basic_players_info, players_pricing = st.tabs(["Basic Info", "Pricing"])
+            with basic_players_info:
+                players_df = hp.read_players(os.path.abspath("data/players.csv"))
+                players_df = st.data_editor(players_df, num_rows="dynamic")
 
-            if st.button(label="Save", key="players_event_save_button"):
-                players_df.write_csv(file="data/players.csv")
-                st.rerun()
+                if st.button(label="Save", key="players_event_save_button"):
+                    players_df.write_csv(file="data/players.csv")
+                    st.rerun()
+
+            with players_pricing:
+                if players_df is not None:
+                    pricing_df = hp.return_player_pricing(os.path.abspath("data/players_cost.csv"),
+                                                          players_df)
+                    st.data_editor(pricing_df)
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button(label="Rebuild costs", key="pricing_rebuild"):
+                            hp.remake_player_pricing(os.path.abspath("data/players_cost.csv"),
+                                                     players_df,
+                                                     hp.calculate_performance(hp.return_match_data(os.path.abspath("data/match_data.csv")),
+                                                                              settings_json["multipliers"]))
+                            st.rerun()
+                    with col2:
+                        if st.button(label="Save edits", key="pricing_edit_save"):
+                            pricing_df.write_csv("data/players_cost.csv")
+                            st.rerun()
+
+                else:
+                    st.warning("Player info file missing")
+
+
 
     with session_state_tab:
         st.subheader("Session state:")
@@ -147,10 +173,14 @@ else:
                 match_df = match_df.filter(pl.col("patch") == settings_json["patch"])
                 match_df = match_df[settings_json["needed_columns"]]
                 match_df.write_csv("data/match_data.csv")
+                performance_df = hp.calculate_performance(match_df, settings_json["multipliers"])
+                performance_df.write_csv("data/player_performance.csv")
                 uploaded_file = None
                 st.rerun()
         else:
-            basic_match_data_tab, filter_match_data_tab = st.tabs(["Basic/update", "Filter"])
+            basic_match_data_tab, filter_match_data_tab, avg_performance_tab = st.tabs(["Basic/update",
+                                                                                        "Filter",
+                                                                                        "Avg. Performance"])
 
             with basic_match_data_tab:
                 st.data_editor(match_df)
@@ -163,7 +193,8 @@ else:
                     match_df = match_df.filter(pl.col("league") == settings_json["event_name"])
                     match_df = match_df.filter(pl.col("patch") == settings_json["patch"])
                     match_df = match_df[settings_json["needed_columns"]]
-
+                    performance_df = hp.calculate_performance(match_df, settings_json["multipliers"])
+                    performance_df.write_csv("data/player_performance.csv")
                     match_df.write_csv("data/match_data.csv")
 
             with filter_match_data_tab:
@@ -178,3 +209,17 @@ else:
                 st.subheader("Performance")
                 st.dataframe(hp.calculate_performance(match_df.filter(pl.col(filter_column) == filter_choice),
                                                       settings_json["multipliers"]))
+
+            with avg_performance_tab:
+                performance_df = hp.calculate_performance(match_df, settings_json["multipliers"])
+                if performance_df is None:
+                    st.warning("Base performance missing")
+                else:
+                    avg_performance_df = hp.return_avg_performance(os.path.abspath("data/avg_performance.csv"),
+                                                                   performance_df)
+                    st.data_editor(avg_performance_df)
+
+                    if st.button(label="Recalculate averages", key="average_performance_calculation"):
+                        avg_performance_df = hp.recalculate_avg_performance(os.path.abspath("data/avg_performance.csv"),
+                                                                            performance_df)
+                        st.rerun()

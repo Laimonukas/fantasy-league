@@ -46,7 +46,12 @@
                             "damagetochampions": 0.1,
                             "totalgold": 0.1,
                             "total cs": 0.2},
-                   "extra": {"sup": {"visionscore": 2,
+                   "extra": {"sup": {"visionscore": 3,
                                      "kills": 5,
-                                     "assists":  10}}}
+                                     "assists":  10,
+                                     "damagetochampions": 0.1},
+                             "jng": {"barons": 50,
+                                     "assists":  5,
+                                     "total cs":  0.2,
+                                     "firstblood": 10}}}
 }
