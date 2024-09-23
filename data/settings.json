@@ -30,7 +30,7 @@
                     "total cs",
                     "golddiffat10",
                     "golddiffat20"],
-  "multipliers" : {"base": {"result": 25,
+ "multipliers" : {"base": {"result": 500,
                             "kills": 2,
                             "deaths": -1,
                             "assists": 1,
@@ -53,5 +53,14 @@
                              "jng": {"barons": 50,
                                      "assists":  5,
                                      "total cs":  0.2,
-                                     "firstblood": 10}}}
+                                     "firstblood": 10}}},
+ "modifiers": {"firstblood": [1.75, 0.75],
+               "teemo": [100000, 0],
+               "deathless": [1.75, 0.75],
+               "triple+": [1.5, 0.75],
+               "dmg 40k+": [1.25, 0.85],
+               "dmg 100k+": [2.25, 0.5],
+               "visionary(200+)": [2, 0.75],
+               "early loser(-1k gold@10)": [1.5, 0.75],
+               "cs 350+": [1.75, 0.75]}
 }

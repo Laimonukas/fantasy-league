@@ -279,3 +279,96 @@ def stringify_player_costs(player_cost_df: pl.DataFrame) -> list:
 
 def return_only_team_owners(login_abs_path: str) -> list:
     return read_login(login_abs_path)["name"].to_list()
+
+
+def calculate_fantasy_team_performance(event_data: pl.DataFrame,
+                                       owner_fantasy_teams: pl.DataFrame,
+                                       match_data: pl.DataFrame):
+    event_matches_dict = event_matches_dictionary(event_data,
+                                                  match_data)
+    teams_score_df = None
+    for team in owner_fantasy_teams.rows(named=True):
+        event_matches = event_matches_dict[team["eventname"]]
+        if teams_score_df is None:
+            pass
+
+
+def event_matches_dictionary(event_data: pl.DataFrame,
+                             match_data: pl.DataFrame) -> dict:
+    event_matches = dict()
+    for event in event_data.rows(named=True):
+        event_matches[event["name"]] = return_filtered_matches(match_data,
+                                                               event["start_str"],
+                                                               event["end_str"])
+    return event_matches
+
+
+def score_for_specific_team(team_dict: dict,
+                            event_matches_dict: dict,
+                            multipliers_json: dict,
+                            modifiers_json: dict) -> pl.DataFrame:
+    overall_score = 0
+    event_matches = event_matches_dict[team_dict["eventname"]]
+    score_dict = {"eventname": team_dict["eventname"],
+                  "overall": 0,
+                  "top": 0,
+                  "jng": 0,
+                  "mid": 0,
+                  "bot": 0,
+                  "sup": 0,
+                  "modifier_diff": 0}
+
+    if event_matches.count == 0:
+        return score_dict
+    else:
+        positions = ["top", "jng", "mid", "bot", "sup"]
+
+        for position in positions:
+            player_matches = event_matches.filter(pl.col("playername") == team_dict[position])
+            player_performance = calculate_performance(player_matches, multipliers_json)
+
+            if team_dict["player"] is not None and team_dict["player"] == team_dict[position]:
+                old_performance = player_performance
+                player_performance = player_performance.with_columns((pl.col("performance") * check_for_modifier(team_dict["modifier"],
+                                                                                                                 player_matches,
+                                                                                                                 modifiers_json)).alias("performance"))
+
+                score_dict[position] = player_performance["performance"].sum()
+                score_dict["modifier_diff"] = round((player_performance["performance"].sum() - old_performance["performance"].sum()), 2)
+                overall_score += player_performance["performance"].sum()
+            else:
+                score_dict[position] = player_performance["performance"].sum()
+                overall_score += player_performance["performance"].sum()
+
+        score_dict["overall"] = overall_score
+        return pl.DataFrame(data=score_dict)
+
+
+def check_for_modifier(modifier_type: str,
+                       player_matches: pl.DataFrame,
+                       modifier_dict: dict) -> pl.Series:
+    match modifier_type:
+        case "firstblood":
+            mask = player_matches["firstblood"] == 1
+        case "teemo":
+            mask = player_matches["champion"] == "Teemo"
+        case "deathless":
+            mask = player_matches["deaths"] == 0
+        case "triple+":
+            mask = ((player_matches["triplekills"] > 0) |
+                    (player_matches["quadrakills"] > 0) |
+                    (player_matches["pentakills"] > 0))
+        case "dmg 40k+":
+            mask = player_matches["damagetochampions"] >= 40000
+        case "dmg 100k+":
+            mask = player_matches["damagetochampions"] >= 100000
+        case "visionary(200+)":
+            mask = player_matches["visionscore"] >= 200
+        case "early loser(-1k gold@10)":
+            mask = player_matches["golddiffat10"] <= -1000
+        case "cs 350+":
+            mask = player_matches["total cs"] >= 350
+
+    mask = mask.map_elements(lambda x: modifier_dict[modifier_type][0] if x else modifier_dict[modifier_type][1])
+    return mask
+

@@ -41,7 +41,7 @@ else:
         upcoming_series = schedule_df.filter(pl.col("locked") == False)
 
 
-        fantasy_team_builds, _ = st.tabs(["Fantasy Teams", ""])
+        fantasy_team_builds, fantasy_results_tab = st.tabs(["Fantasy Teams", "Fantasy Results"])
 
         with fantasy_team_builds:
             your_fantasy_team_tab, other_players_tab = st.tabs(["Your Fantasy Team", "Other Fantasy Teams"])
@@ -102,8 +102,8 @@ else:
                 mult_col, mult_player_col = st.columns(2)
 
                 with mult_col:
-                    mult_selection = st.selectbox(label="Multiplier:",
-                                                  options=["WIP"])
+                    mult_selection = st.selectbox(label="Modifier:",
+                                                  options=settings_json["modifiers"].keys())
 
                 with mult_player_col:
                     if [v is None for v in [top_selection,
@@ -156,3 +156,18 @@ else:
                 team_owner_selection = st.selectbox(label="Select player",
                                                     options=team_owners)
                 st.dataframe(hp.return_event_selection(os.path.abspath(f"data/teams/{team_owner_selection}_teams.csv")))
+
+        with fantasy_results_tab:
+
+            fantasy_results_placement, fantasy_results_over_time = st.tabs(["Current Placement",
+                                                                            "Over time"])
+
+            with fantasy_results_placement:
+                event_dict = hp.event_matches_dictionary(schedule_df,
+                                                         match_data_df)
+
+                score = hp.score_for_specific_team(event_fantasy_teams.row(1, named=True),
+                                                   event_dict,
+                                                   settings_json["multipliers"],
+                                                   settings_json["modifiers"])
+                st.dataframe(score)
