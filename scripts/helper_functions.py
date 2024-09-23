@@ -87,8 +87,6 @@ def return_settings_data(abs_path: str) -> dict:
 
 
 def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
-    player_df = df.filter(pl.col("playername") is not None)
-
     performance_df = pl.DataFrame(data=[],
                                   schema={"gameid": pl.String,
                                           "date": pl.String,
@@ -96,6 +94,10 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
                                           "position": pl.String,
                                           "playername": pl.String,
                                           "performance": pl.Float64})
+    if df is None:
+        return performance_df
+
+    player_df = df.filter(pl.col("playername") is not None)
 
     for row in player_df.rows(named=True):
         if row["playername"] is None:
