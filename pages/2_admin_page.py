@@ -62,7 +62,10 @@ else:
         schedule_df = hp.read_schedule(os.path.abspath("data/schedule.csv"))
         settings_json = hp.return_settings_data(os.path.abspath("data/settings.json"))
 
-        basic_event_tab, weeks_event_tab, players_event_tab = st.tabs(["Basic", "Weeks", "Players"])
+        basic_event_tab, weeks_event_tab, players_event_tab, fantasy_teams_tab = st.tabs(["Basic",
+                                                                                          "Weeks",
+                                                                                          "Players",
+                                                                                          "Fantasy Teams"])
         with basic_event_tab:
             st.page_link(label="Main Wiki", page="https://lol.fandom.com/wiki/2024_Season_World_Championship")
             st.text("Start date: 2024-09-25")
@@ -147,6 +150,16 @@ else:
                 else:
                     st.warning("Player info file missing")
 
+        with fantasy_teams_tab:
+            team_owners = hp.return_only_team_owners(os.path.abspath("data/logins.csv"))
+
+            fantasy_player_selection = st.selectbox("Edit for player:",
+                                                    options=team_owners)
+            owner_teams = hp.return_event_selection(os.path.abspath(f"data/teams/{fantasy_player_selection}_teams.csv"))
+            owner_teams = st.data_editor(owner_teams, num_rows="dynamic")
+            if st.button(label="Save edits for owner"):
+                owner_teams.write_csv(os.path.abspath(f"data/teams/{fantasy_player_selection}_teams.csv"))
+                st.rerun()
 
 
     with session_state_tab:

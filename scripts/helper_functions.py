@@ -4,6 +4,8 @@ import os
 import polars as pl
 import json
 
+import plotly.express as px
+
 def return_hash(x: object) -> str:
     hash_object = hashlib.md5(str(x).encode())
     return hash_object.hexdigest()
@@ -283,14 +285,28 @@ def return_only_team_owners(login_abs_path: str) -> list:
 
 def calculate_fantasy_team_performance(event_data: pl.DataFrame,
                                        owner_fantasy_teams: pl.DataFrame,
-                                       match_data: pl.DataFrame):
+                                       match_data: pl.DataFrame,
+                                       multipliers_json: dict,
+                                       modifiers_json: dict):
     event_matches_dict = event_matches_dictionary(event_data,
                                                   match_data)
     teams_score_df = None
     for team in owner_fantasy_teams.rows(named=True):
-        event_matches = event_matches_dict[team["eventname"]]
+
+        #event_matches = event_matches_dict[team["eventname"]]
+
         if teams_score_df is None:
-            pass
+            teams_score_df = score_for_specific_team(team,
+                                                     event_matches_dict,
+                                                     multipliers_json,
+                                                     modifiers_json)
+        else:
+            teams_score_df = teams_score_df.vstack(score_for_specific_team(team,
+                                                                           event_matches_dict,
+                                                                           multipliers_json,
+                                                                           modifiers_json))
+
+    return teams_score_df
 
 
 def event_matches_dictionary(event_data: pl.DataFrame,
@@ -307,16 +323,16 @@ def score_for_specific_team(team_dict: dict,
                             event_matches_dict: dict,
                             multipliers_json: dict,
                             modifiers_json: dict) -> pl.DataFrame:
-    overall_score = 0
+    overall_score = 0.0
     event_matches = event_matches_dict[team_dict["eventname"]]
     score_dict = {"eventname": team_dict["eventname"],
-                  "overall": 0,
-                  "top": 0,
-                  "jng": 0,
-                  "mid": 0,
-                  "bot": 0,
-                  "sup": 0,
-                  "modifier_diff": 0}
+                  "overall": 0.0,
+                  "top": 0.0,
+                  "jng": 0.0,
+                  "mid": 0.0,
+                  "bot": 0.0,
+                  "sup": 0.0,
+                  "modifier_diff": 0.0}
 
     if event_matches.count == 0:
         return score_dict
@@ -340,7 +356,7 @@ def score_for_specific_team(team_dict: dict,
                 score_dict[position] = player_performance["performance"].sum()
                 overall_score += player_performance["performance"].sum()
 
-        score_dict["overall"] = overall_score
+        score_dict["overall"] = round(overall_score, 2)
         return pl.DataFrame(data=score_dict)
 
 
@@ -371,4 +387,34 @@ def check_for_modifier(modifier_type: str,
 
     mask = mask.map_elements(lambda x: modifier_dict[modifier_type][0] if x else modifier_dict[modifier_type][1])
     return mask
+
+
+def return_combined_results_of_each_owner(team_owners: list,
+                                          schedule_df,
+                                          match_data_df,
+                                          settings_json):
+    combined_results = None
+    for team_owner in team_owners:
+        if combined_results is None:
+            combined_results = return_event_selection(os.path.abspath(f"data/teams/{team_owner}_teams.csv"))
+
+            combined_results = calculate_fantasy_team_performance(schedule_df,
+                                                                     combined_results,
+                                                                     match_data_df,
+                                                                     settings_json["multipliers"],
+                                                                     settings_json["modifiers"])
+            if combined_results is None:
+                continue
+            combined_results = combined_results.with_columns(owner=pl.lit(team_owner))
+        else:
+            new_results = return_event_selection(os.path.abspath(f"data/teams/{team_owner}_teams.csv"))
+            new_results = calculate_fantasy_team_performance(schedule_df,
+                                                                new_results,
+                                                                match_data_df,
+                                                                settings_json["multipliers"],
+                                                                settings_json["modifiers"])
+            new_results = new_results.with_columns(owner=pl.lit(team_owner))
+            combined_results = combined_results.vstack(new_results)
+
+    return combined_results
 

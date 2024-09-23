@@ -40,8 +40,9 @@ else:
     else:
         upcoming_series = schedule_df.filter(pl.col("locked") == False)
 
-
-        fantasy_team_builds, fantasy_results_tab = st.tabs(["Fantasy Teams", "Fantasy Results"])
+        fantasy_team_builds, fantasy_results_tab, player_results_tab = st.tabs(["Fantasy Teams",
+                                                                                "Fantasy Results",
+                                                                                "Player Results"])
 
         with fantasy_team_builds:
             your_fantasy_team_tab, other_players_tab = st.tabs(["Your Fantasy Team", "Other Fantasy Teams"])
@@ -159,15 +160,128 @@ else:
 
         with fantasy_results_tab:
 
-            fantasy_results_placement, fantasy_results_over_time = st.tabs(["Current Placement",
-                                                                            "Over time"])
-
+            fantasy_results_placement, fantasy_results_over_series = st.tabs(["Current Placement",
+                                                                              "Results over Series"])
+            combined_results = hp.return_combined_results_of_each_owner(team_owners,
+                                                                        schedule_df,
+                                                                        match_data_df,
+                                                                        settings_json)
             with fantasy_results_placement:
-                event_dict = hp.event_matches_dictionary(schedule_df,
-                                                         match_data_df)
+                fig = px.bar(combined_results,
+                             x="owner",
+                             y="overall",
+                             text="overall",
+                             barmode="group")
+                fig.update_layout(xaxis=dict(autorange="reversed",
+                                             title="Players"),
+                                  title="Each player scores")
 
-                score = hp.score_for_specific_team(event_fantasy_teams.row(1, named=True),
-                                                   event_dict,
-                                                   settings_json["multipliers"],
-                                                   settings_json["modifiers"])
-                st.dataframe(score)
+                st.plotly_chart(fig)
+                #st.dataframe(combined_results)
+
+            with fantasy_results_over_series:
+                fig = px.bar(data_frame=combined_results,
+                             x="eventname",
+                             y="overall",
+                             color="owner",
+                             text="overall",
+                             barmode="group")
+                fig.update_layout(xaxis=dict(autorange="reversed",
+                                             title="Series"),
+                                  title="Each player scores over series")
+                st.plotly_chart(fig)
+
+        with player_results_tab:
+            filtered_matches_df = match_data_df.filter(pl.col("playername").is_in(player_cost["playername"]))
+            filter_option = st.selectbox(label="Filter by:",
+                                         options=["Stage",
+                                                  "Date",
+                                                  "Player",
+                                                  "Position",
+                                                  "Team"])
+
+            match filter_option:
+                case "Stage":
+                    stage_option = st.selectbox(label="Stage to select:",
+                                                options=schedule_df["name"])
+                    stage_row = schedule_df.row(by_predicate=(pl.col("name") == stage_option),
+                                                named=True)
+
+                    filtered_matches_df = hp.return_filtered_matches(filtered_matches_df,
+                                                                     stage_row["start_str"],
+                                                                     stage_row["end_str"])
+                case "Date":
+                    schedule_start_date = st.date_input(label="Start date",
+                                                        min_value=datetime.strptime("2024-09-25",
+                                                                                    "%Y-%m-%d"),
+                                                        max_value=datetime.strptime("2024-11-03", "%Y-%m-%d"))
+
+                    schedule_end_date = st.date_input(label="End date",
+                                                      min_value=schedule_start_date,
+                                                      max_value=datetime.strptime("2024-11-03", "%Y-%m-%d"))
+                    schedule_start_date = schedule_start_date.strftime("%Y-%m-%d")
+                    schedule_end_date = schedule_end_date.strftime("%Y-%m-%d")
+                    filtered_matches_df = hp.return_filtered_matches(filtered_matches_df,
+                                                                     schedule_start_date,
+                                                                     schedule_end_date)
+                case "Player":
+                    player_option = st.selectbox(label="Player to filter for:",
+                                                 options=player_cost["playername"])
+                    filtered_matches_df = filtered_matches_df.filter(pl.col("playername") == player_option)
+                case "Position":
+                    position_option = st.selectbox(label="Filter for position:",
+                                                   options=["top", "jng", "mid", "bot", "sup"])
+                    filtered_matches_df = filtered_matches_df.filter(pl.col("position") == position_option)
+                case "Team":
+                    teams = set(filtered_matches_df["teamname"].to_list())
+                    team_option = st.selectbox(label="Team to filter for:",
+                                               options=teams)
+                    filtered_matches_df = filtered_matches_df.filter(pl.col("teamname") == team_option)
+
+            performance_data = hp.calculate_performance(filtered_matches_df,
+                                                        settings_json["multipliers"])
+            filtered_matches_df = filtered_matches_df.with_columns(performance=performance_data["performance"])
+
+            raw_data_tab, visual_data_tab = st.tabs(["Raw Data", "Visuals"])
+
+            with raw_data_tab:
+                st.dataframe(filtered_matches_df)
+
+            with visual_data_tab:
+                column_option = st.selectbox(label="What data to show:",
+                                             options=["kills",
+                                                      "deaths",
+                                                      "assists",
+                                                      "firstblood",
+                                                      "barons",
+                                                      "damagetochampions",
+                                                      "dpm",
+                                                      "visionscore",
+                                                      "total cs",
+                                                      "golddiffat10",
+                                                      "golddiffat20",
+                                                      "performance"])
+                base_tab, trend_tab = st.tabs(["Basic", "Trend"])
+                with base_tab:
+                    fig = px.scatter(data_frame=filtered_matches_df,
+                                     x="date",
+                                     y=column_option,
+                                     color="playername",
+                                     hover_data=["performance",
+                                                 "gameid",
+                                                 "result",
+                                                 "side"])
+                    st.plotly_chart(fig)
+                with trend_tab:
+                    check_win = st.checkbox(label="Result(win/loss) as Y column")
+                    y_col = "result" if check_win else "performance"
+                    fig = px.scatter(data_frame=filtered_matches_df,
+                                     y=y_col,
+                                     x=column_option,
+                                     color="playername",
+                                     hover_data=["performance",
+                                                 "gameid",
+                                                 "result",
+                                                 "side"],
+                                     trendline="ols")
+                    st.plotly_chart(fig)
