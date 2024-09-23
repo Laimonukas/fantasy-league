@@ -4,3 +4,4 @@
 /__pycache__/
 *.ps1
 match_data.csv
+*.csv
