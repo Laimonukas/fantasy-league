@@ -365,6 +365,9 @@ def score_for_specific_team(team_dict: dict,
 def check_for_modifier(modifier_type: str,
                        player_matches: pl.DataFrame,
                        modifier_dict: dict) -> pl.Series:
+    if player_matches is None or player_matches.count == 0:
+        return None
+
     match modifier_type:
         case "firstblood":
             mask = player_matches["firstblood"] == 1
@@ -387,7 +390,8 @@ def check_for_modifier(modifier_type: str,
         case "cs 350+":
             mask = player_matches["total cs"] >= 350
 
-    mask = mask.map_elements(lambda x: modifier_dict[modifier_type][0] if x else modifier_dict[modifier_type][1])
+    mask = mask.map_elements(lambda x: modifier_dict[modifier_type][0] if x else modifier_dict[modifier_type][1],
+                             skip_nulls=False)
     return mask
 
 
@@ -415,6 +419,9 @@ def return_combined_results_of_each_owner(team_owners: list,
                                                                 match_data_df,
                                                                 settings_json["multipliers"],
                                                                 settings_json["modifiers"])
+            if new_results is None:
+                return combined_results
+
             new_results = new_results.with_columns(owner=pl.lit(team_owner))
             combined_results = combined_results.vstack(new_results)
 
