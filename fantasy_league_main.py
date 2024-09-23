@@ -166,30 +166,32 @@ else:
                                                                         schedule_df,
                                                                         match_data_df,
                                                                         settings_json)
-            with fantasy_results_placement:
-                fig = px.bar(combined_results,
-                             x="owner",
-                             y="overall",
-                             text="overall",
-                             barmode="group")
-                fig.update_layout(xaxis=dict(autorange="reversed",
-                                             title="Players"),
-                                  title="Each player scores")
+            if combined_results is not None:
+                with fantasy_results_placement:
+                    fig = px.bar(combined_results,
+                                 x="owner",
+                                 y="overall",
+                                 text="overall",
+                                 barmode="group")
+                    fig.update_layout(xaxis=dict(autorange="reversed",
+                                                 title="Players"),
+                                      title="Each player scores")
 
-                st.plotly_chart(fig)
-                #st.dataframe(combined_results)
+                    st.plotly_chart(fig)
 
-            with fantasy_results_over_series:
-                fig = px.bar(data_frame=combined_results,
-                             x="eventname",
-                             y="overall",
-                             color="owner",
-                             text="overall",
-                             barmode="group")
-                fig.update_layout(xaxis=dict(autorange="reversed",
-                                             title="Series"),
-                                  title="Each player scores over series")
-                st.plotly_chart(fig)
+                with fantasy_results_over_series:
+                    fig = px.bar(data_frame=combined_results,
+                                 x="eventname",
+                                 y="overall",
+                                 color="owner",
+                                 text="overall",
+                                 barmode="group")
+                    fig.update_layout(xaxis=dict(autorange="reversed",
+                                                 title="Series"),
+                                      title="Each player scores over series")
+                    st.plotly_chart(fig)
+            else:
+                st.warning("No results yet.")
 
         with player_results_tab:
             filtered_matches_df = match_data_df.filter(pl.col("playername").is_in(player_cost["playername"]))
