@@ -129,7 +129,7 @@ else:
                 if players_df is not None:
                     pricing_df = hp.return_player_pricing(os.path.abspath("data/players_cost.csv"),
                                                           players_df)
-                    st.data_editor(pricing_df)
+                    pricing_df = st.data_editor(pricing_df)
 
                     col1, col2 = st.columns(2)
                     with col1:

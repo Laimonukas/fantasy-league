@@ -247,3 +247,35 @@ def return_filtered_matches(match_df: pl.DataFrame,
     filter_df = match_df.filter((pl.col("date").str.to_datetime() < datetime.strptime(end_date, "%Y-%m-%d")) &
                                 (pl.col("date").str.to_datetime() > datetime.strptime(start_date, "%Y-%m-%d")))
     return filter_df
+
+
+def return_event_selection(abs_path: str) -> pl.DataFrame:
+    if os.path.isfile(abs_path):
+        return pl.read_csv(source=abs_path,
+                           schema={"eventname": pl.String,
+                                   "top": pl.String,
+                                   "jng": pl.String,
+                                   "mid": pl.String,
+                                   "bot": pl.String,
+                                   "sup": pl.String,
+                                   "modifier": pl.String,
+                                   "player": pl.String})
+    else:
+        new_df = pl.DataFrame(data=[],
+                              schema={"eventname": pl.String,
+                                      "top": pl.String,
+                                      "jng": pl.String,
+                                      "mid": pl.String,
+                                      "bot": pl.String,
+                                      "sup": pl.String,
+                                      "modifier": pl.String,
+                                      "player": pl.String})
+        new_df.write_csv(abs_path)
+        return new_df
+
+
+def stringify_player_costs(player_cost_df: pl.DataFrame) -> list:
+    return [f"{row['playername']} ({row['playercost']})" for row in player_cost_df.rows(named=True)]
+
+def return_only_team_owners(login_abs_path: str) -> list:
+    return read_login(login_abs_path)["name"].to_list()
