@@ -128,7 +128,7 @@ else:
                                         bot_selection,
                                         sup_selection]].count(True) > 0:
                     st.warning("Not all positions filled, can't save.")
-                else:
+                elif selected_series is not None:
                     if st.button(label="Save selection"):
 
                         new_event_row_df = pl.DataFrame(data=[[selected_series,
