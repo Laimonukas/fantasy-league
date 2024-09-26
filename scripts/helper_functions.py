@@ -76,6 +76,8 @@ def return_match_data(abs_path: str) -> pl.DataFrame:
         return None
     else:
         return pl.read_csv(source=abs_path,
+                           has_header=True,
+                           infer_schema=True,
                            columns=["gameid",
                                     "date",
                                     "participantid",
@@ -104,7 +106,36 @@ def return_match_data(abs_path: str) -> pl.DataFrame:
                                     "totalgold",
                                     "total cs",
                                     "golddiffat10",
-                                    "golddiffat20"])
+                                    "golddiffat20"],
+                           schema={"gameid": pl.String,
+                                    "date": pl.String,
+                                    "participantid": pl.String,
+                                    "side": pl.String,
+                                    "playername": pl.String,
+                                    "position": pl.String,
+                                    "teamname": pl.String,
+                                    "champion": pl.String,
+                                    "result": pl.Int8,
+                                    "kills": pl.Int8,
+                                    "deaths": pl.Int8,
+                                    "assists": pl.Int8,
+                                    "doublekills": pl.Int8,
+                                    "triplekills": pl.Int8,
+                                    "quadrakills": pl.Int8,
+                                    "pentakills": pl.Int8,
+                                    "firstblood": pl.Int8,
+                                    "firstbloodkill": pl.Int8,
+                                    "firstbloodassist": pl.Int8,
+                                    "firstbloodvictim": pl.Int8,
+                                    "barons": pl.Int8,
+                                    "inhibitors": pl.Int8,
+                                    "damagetochampions": pl.Float64,
+                                    "dpm": pl.Float64,
+                                    "visionscore": pl.Int16,
+                                    "totalgold": pl.Int32,
+                                    "total cs": pl.Int16,
+                                    "golddiffat10": pl.Float64,
+                                    "golddiffat20": pl.Float64})
 
 
 def return_settings_data(abs_path: str) -> dict:
@@ -126,14 +157,17 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
     if df is None:
         return performance_df
 
-    player_df = df.filter(pl.col("playername") is not None)
+    player_df = df.filter(pl.col("playername") != "team")
 
     for row in player_df.rows(named=True):
         if row["playername"] is None:
             continue
         performance_score = 0
         for key, value in multipliers["base"].items():
-            performance_score += row[key] * value
+            try:
+                performance_score += row[key] * value
+            except:
+                print(f"key: {key}, value: {value}, rowkey: {row[key]}")
 
         performance_score = round(performance_score, 2)
 
@@ -457,3 +491,37 @@ def return_combined_results_of_each_owner(team_owners: list,
 
     return combined_results
 
+
+def read_uploaded_file(file):
+    return pl.read_csv(source=file,
+                       has_header=True,
+                       infer_schema=True,
+                       schema_overrides={"gameid": pl.String,
+                                         "date": pl.String,
+                                         "participantid": pl.String,
+                                         "side": pl.String,
+                                         "playername": pl.String,
+                                         "position": pl.String,
+                                         "teamname": pl.String,
+                                         "champion": pl.String,
+                                         "result": pl.Int8,
+                                         "kills": pl.Int8,
+                                         "deaths": pl.Int8,
+                                         "assists": pl.Int8,
+                                         "doublekills": pl.Int8,
+                                         "triplekills": pl.Int8,
+                                         "quadrakills": pl.Int8,
+                                         "pentakills": pl.Int8,
+                                         "firstblood": pl.Int8,
+                                         "firstbloodkill": pl.Int8,
+                                         "firstbloodassist": pl.Int8,
+                                         "firstbloodvictim": pl.Int8,
+                                         "barons": pl.Int8,
+                                         "inhibitors": pl.Int8,
+                                         "damagetochampions": pl.Float64,
+                                         "dpm": pl.Float64,
+                                         "visionscore": pl.Int16,
+                                         "totalgold": pl.Int32,
+                                         "total cs": pl.Int16,
+                                         "golddiffat10": pl.Float64,
+                                         "golddiffat20": pl.Float64})

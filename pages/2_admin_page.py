@@ -181,7 +181,7 @@ else:
                                              accept_multiple_files=False,
                                              key="missing_file_upload")
             if uploaded_file is not None:
-                match_df = pl.read_csv(uploaded_file)
+                match_df = hp.read_uploaded_file(uploaded_file)
                 match_df = match_df.filter(pl.col("league") == settings_json["event_name"])
                 match_df = match_df.filter(pl.col("patch") == settings_json["patch"])
                 match_df = match_df[settings_json["needed_columns"]]

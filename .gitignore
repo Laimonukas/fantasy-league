@@ -5,3 +5,4 @@
 *.ps1
 match_data.csv
 *.csv
+/data/*.csv

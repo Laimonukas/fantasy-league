@@ -287,3 +287,4 @@ else:
                                                  "side"],
                                      trendline="ols")
                     st.plotly_chart(fig)
+
