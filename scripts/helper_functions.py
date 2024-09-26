@@ -78,36 +78,7 @@ def return_match_data(abs_path: str) -> pl.DataFrame:
         return pl.read_csv(source=abs_path,
                            has_header=True,
                            infer_schema=True,
-                           columns=["gameid",
-                                    "date",
-                                    "participantid",
-                                    "side",
-                                    "playername",
-                                    "position",
-                                    "teamname",
-                                    "champion",
-                                    "result",
-                                    "kills",
-                                    "deaths",
-                                    "assists",
-                                    "doublekills",
-                                    "triplekills",
-                                    "quadrakills",
-                                    "pentakills",
-                                    "firstblood",
-                                    "firstbloodkill",
-                                    "firstbloodassist",
-                                    "firstbloodvictim",
-                                    "barons",
-                                    "inhibitors",
-                                    "damagetochampions",
-                                    "dpm",
-                                    "visionscore",
-                                    "totalgold",
-                                    "total cs",
-                                    "golddiffat10",
-                                    "golddiffat20"],
-                           schema={"gameid": pl.String,
+                           schema_overrides={"gameid": pl.String,
                                     "date": pl.String,
                                     "participantid": pl.String,
                                     "side": pl.String,
@@ -166,8 +137,6 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
         for key, value in multipliers["base"].items():
             performance_score += row[key] * value
 
-        performance_score = round(performance_score, 2)
-
         if row["position"] =="sup":
             for key, value in multipliers["extra"]["sup"].items():
                 performance_score += row[key] * value
@@ -175,6 +144,7 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
             for key, value in multipliers["extra"]["jng"].items():
                 performance_score += row[key] * value
 
+        performance_score = round(performance_score, 2)
         new_row = pl.DataFrame(data=[[row["gameid"],
                                       row["date"],
                                       row["teamname"],
@@ -466,20 +436,20 @@ def return_combined_results_of_each_owner(team_owners: list,
             combined_results = return_event_selection(os.path.abspath(f"data/teams/{team_owner}_teams.csv"))
 
             combined_results = calculate_fantasy_team_performance(schedule_df,
-                                                                     combined_results,
-                                                                     match_data_df,
-                                                                     settings_json["multipliers"],
-                                                                     settings_json["modifiers"])
+                                                                  combined_results,
+                                                                  match_data_df,
+                                                                  settings_json["multipliers"],
+                                                                  settings_json["modifiers"])
             if combined_results is None:
                 continue
             combined_results = combined_results.with_columns(owner=pl.lit(team_owner))
         else:
             new_results = return_event_selection(os.path.abspath(f"data/teams/{team_owner}_teams.csv"))
             new_results = calculate_fantasy_team_performance(schedule_df,
-                                                                new_results,
-                                                                match_data_df,
-                                                                settings_json["multipliers"],
-                                                                settings_json["modifiers"])
+                                                             new_results,
+                                                             match_data_df,
+                                                             settings_json["multipliers"],
+                                                             settings_json["modifiers"])
             if new_results is None:
                 return combined_results
 
