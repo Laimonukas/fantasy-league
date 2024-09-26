@@ -106,14 +106,14 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
             continue
         performance_score = 0
         for key, value in multipliers["base"].items():
-            performance_score += row[key] * value
+            performance_score += float(row[key]) * float(value)
 
         if row["position"] =="sup":
             for key, value in multipliers["extra"]["sup"].items():
-                performance_score += row[key] * value
+                performance_score += float(row[key]) * float(value)
         if row["position"] =="jng":
             for key, value in multipliers["extra"]["jng"].items():
-                performance_score += row[key] * value
+                performance_score += float(row[key]) * float(value)
 
         performance_score = round(performance_score, 2)
         new_row = pl.DataFrame(data=[[row["gameid"],
@@ -434,3 +434,7 @@ def read_uploaded_file(file):
     return pl.read_csv(source=file,
                        has_header=True,
                        infer_schema=True)
+
+
+def return_fantasy_teams_by_stage(data_folder_path: str):
+    pass
