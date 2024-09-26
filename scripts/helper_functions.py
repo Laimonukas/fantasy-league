@@ -164,10 +164,7 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
             continue
         performance_score = 0
         for key, value in multipliers["base"].items():
-            try:
-                performance_score += row[key] * value
-            except:
-                print(f"key: {key}, value: {value}, rowkey: {row[key]}")
+            performance_score += row[key] * value
 
         performance_score = round(performance_score, 2)
 
