@@ -75,7 +75,36 @@ def return_match_data(abs_path: str) -> pl.DataFrame:
     if not os.path.isfile(abs_path):
         return None
     else:
-        return pl.read_csv(source=abs_path)
+        return pl.read_csv(source=abs_path,
+                           columns=["gameid",
+                                    "date",
+                                    "participantid",
+                                    "side",
+                                    "playername",
+                                    "position",
+                                    "teamname",
+                                    "champion",
+                                    "result",
+                                    "kills",
+                                    "deaths",
+                                    "assists",
+                                    "doublekills",
+                                    "triplekills",
+                                    "quadrakills",
+                                    "pentakills",
+                                    "firstblood",
+                                    "firstbloodkill",
+                                    "firstbloodassist",
+                                    "firstbloodvictim",
+                                    "barons",
+                                    "inhibitors",
+                                    "damagetochampions",
+                                    "dpm",
+                                    "visionscore",
+                                    "totalgold",
+                                    "total cs",
+                                    "golddiffat10",
+                                    "golddiffat20"])
 
 
 def return_settings_data(abs_path: str) -> dict:
@@ -105,6 +134,7 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
         performance_score = 0
         for key, value in multipliers["base"].items():
             performance_score += row[key] * value
+
         performance_score = round(performance_score, 2)
 
         if row["position"] =="sup":
