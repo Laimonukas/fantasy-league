@@ -433,8 +433,61 @@ def return_combined_results_of_each_owner(team_owners: list,
 def read_uploaded_file(file):
     return pl.read_csv(source=file,
                        has_header=True,
-                       infer_schema=True)
+                       infer_schema=True,
+                       skip_rows_after_header=100000)
 
 
 def return_fantasy_teams_by_stage(data_folder_path: str):
-    pass
+    owners = pl.read_csv(f"{data_folder_path}\\logins.csv")["name"].to_list()
+    schedule_df = read_schedule(f"{data_folder_path}\\schedule.csv")
+    match_df = return_match_data(f"{data_folder_path}\\match_data.csv")
+    settings_json = return_settings_data(f"{data_folder_path}\\settings.json")
+    combined_results = return_combined_results_of_each_owner(owners,
+                                                             schedule_df,
+                                                             match_df,
+                                                             settings_json)
+    events = schedule_df["name"].to_list()
+    fantasy_teams = dict()
+    for owner in owners:
+        fantasy_teams[owner] = return_event_selection(f"{data_folder_path}\\teams\\{owner}_teams.csv")
+
+    results_df = None
+    for event in events:
+        for owner in owners:
+            if results_df is None:
+                results_df = fantasy_teams[owner].filter(pl.col("eventname") == event)
+                results_df = results_df.with_columns(owner=pl.lit(owner))
+
+            else:
+                new_row = fantasy_teams[owner].filter(pl.col("eventname") == event)
+                new_row = new_row.with_columns(owner=pl.lit(owner))
+                results_df = results_df.vstack(new_row)
+            filtered_player_results = combined_results.filter((pl.col("eventname") == event) &
+                                                              (pl.col("owner") == owner))
+            if filtered_player_results.is_empty() == False:
+                fpr = filtered_player_results.row(0, named=True)
+                fpr_row = pl.DataFrame(data=[[str(fpr["overall"]),
+                                              str(fpr["top"]),
+                                              str(fpr["jng"]),
+                                              str(fpr["mid"]),
+                                              str(fpr["bot"]),
+                                              str(fpr["sup"]),
+                                              str("-"),
+                                              str(fpr["modifier_diff"]),
+                                              str(owner)]],
+                                       schema=["eventname",
+                                               "top",
+                                               "jng",
+                                               "mid",
+                                               "bot",
+                                               "sup",
+                                               "modifier",
+                                               "player",
+                                               "owner"],
+                                       strict=False)
+                results_df = results_df.vstack(fpr_row)
+
+    return results_df
+
+
+

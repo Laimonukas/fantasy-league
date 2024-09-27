@@ -154,9 +154,8 @@ else:
                         st.rerun()
 
             with other_players_tab:
-                team_owner_selection = st.selectbox(label="Select player",
-                                                    options=team_owners)
-                st.dataframe(hp.return_event_selection(os.path.abspath(f"data/teams/{team_owner_selection}_teams.csv")))
+                results = hp.return_fantasy_teams_by_stage(os.path.abspath("data/"))
+                st.dataframe(results)
 
         with fantasy_results_tab:
 
