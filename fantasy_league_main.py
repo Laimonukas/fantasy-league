@@ -167,11 +167,12 @@ else:
                                                                         settings_json)
             if combined_results is not None:
                 with fantasy_results_placement:
-                    fig = px.bar(combined_results,
-                                 x="owner",
-                                 y="overall",
-                                 text="overall",
-                                 barmode="group")
+                    fig = px.histogram(combined_results,
+                                       x="owner",
+                                       y="overall",
+                                       text_auto=True,
+                                       barmode="group",
+                                       histfunc="sum")
                     fig.update_layout(xaxis=dict(autorange="reversed",
                                                  title="Players"),
                                       title="Each player scores")
