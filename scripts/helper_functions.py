@@ -115,6 +115,9 @@ def calculate_performance(df: pl.DataFrame, multipliers: dict) -> pl.DataFrame:
             for key, value in multipliers["extra"]["jng"].items():
                 performance_score += float(row[key]) * float(value)
 
+        time = row["gamelength"] // 100
+        performance_score = performance_score / time
+
         performance_score = round(performance_score, 2)
         new_row = pl.DataFrame(data=[[row["gameid"],
                                       row["date"],

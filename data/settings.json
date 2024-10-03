@@ -9,6 +9,7 @@
                     "playername",
                     "teamname",
                     "champion",
+                    "gamelength",
                     "result",
                     "kills",
                     "deaths",
