@@ -446,7 +446,7 @@ def return_fantasy_teams_by_stage(data_folder_path: str):
                                                              schedule_df,
                                                              match_df,
                                                              settings_json)
-    events = schedule_df["name"].to_list()
+    events = list(reversed(schedule_df["name"].to_list()))
     fantasy_teams = dict()
     for owner in owners:
         fantasy_teams[owner] = return_event_selection(f"{data_folder_path}/teams/{owner}_teams.csv")

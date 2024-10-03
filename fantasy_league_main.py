@@ -155,7 +155,7 @@ else:
 
             with other_players_tab:
                 results = hp.return_fantasy_teams_by_stage(os.path.abspath("data/"))
-                st.dataframe(results)
+                st.dataframe(results, height=10000)
 
         with fantasy_results_tab:
 
