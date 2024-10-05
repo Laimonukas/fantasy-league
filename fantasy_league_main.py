@@ -53,13 +53,21 @@ else:
                 st.subheader("Upcoming Series Teams:")
                 selected_series = st.selectbox(label="Series:", options=upcoming_series["name"])
 
+                allowed_tier = upcoming_series.row(by_predicate=(pl.col("name") == selected_series), named=True)
+                allowed_tier = allowed_tier["tier_lock"]
+                if allowed_tier is None:
+                    allowed_tier_mask = (pl.col("tier").is_in(["T1", "T2", "T3", "T4", None]))
+                else:
+                    allowed_tier_mask = (pl.col("tier") == allowed_tier)
+
                 allowed_points = 15
                 spending_list = [0, 0, 0, 0, 0]
                 top_col, jng_col, mid_col, bot_col, sup_col = st.columns(5)
                 with top_col:
                     player_selection_df = player_cost.filter((pl.col("position") == "top") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))))["playername",
-                                                                                                                              "playercost"]
+                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                             allowed_tier_mask)["playername",
+                                                                                "playercost"]
                     top_selection = st.selectbox(label="Top:",
                                                  options=hp.stringify_player_costs(player_selection_df))
                     if top_selection is not None:
@@ -67,32 +75,36 @@ else:
 
                 with jng_col:
                     player_selection_df = player_cost.filter((pl.col("position") == "jng") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))))["playername",
-                                                                                                                              "playercost"]
+                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                             allowed_tier_mask)["playername",
+                                                                                "playercost"]
                     jng_selection = st.selectbox(label="Jng:",
                                                  options=hp.stringify_player_costs(player_selection_df))
                     if jng_selection is not None:
                         spending_list[1] = int(jng_selection[-2])
                 with mid_col:
                     player_selection_df = player_cost.filter((pl.col("position") == "mid") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))))["playername",
-                                                                                                                              "playercost"]
+                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                             allowed_tier_mask)["playername",
+                                                                                "playercost"]
                     mid_selection = st.selectbox(label="mid:",
                                                  options=hp.stringify_player_costs(player_selection_df))
                     if mid_selection is not None:
                         spending_list[2] = int(mid_selection[-2])
                 with bot_col:
                     player_selection_df = player_cost.filter((pl.col("position") == "bot") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))))["playername",
-                                                                                                                              "playercost"]
+                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                             allowed_tier_mask)["playername",
+                                                                                "playercost"]
                     bot_selection = st.selectbox(label="bot:",
                                                  options=hp.stringify_player_costs(player_selection_df))
                     if bot_selection is not None:
                         spending_list[3] = int(bot_selection[-2])
                 with sup_col:
                     player_selection_df = player_cost.filter((pl.col("position") == "sup") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))))["playername",
-                                                                                                                              "playercost"]
+                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                             allowed_tier_mask)["playername",
+                                                                                "playercost"]
                     sup_selection = st.selectbox(label="sup:",
                                                  options=hp.stringify_player_costs(player_selection_df))
                     if sup_selection is not None:

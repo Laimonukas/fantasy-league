@@ -35,7 +35,8 @@ def read_schedule(abs_path: str):
                                            "name": pl.String,
                                            "start_str": pl.String,
                                            "end_str": pl.String,
-                                           "locked": pl.Boolean})
+                                           "locked": pl.Boolean,
+                                           "tier_lock": pl.String})
         schedule_df.write_csv(file=abs_path)
     else:
         schedule_df = pl.read_csv(source=abs_path,
@@ -43,7 +44,8 @@ def read_schedule(abs_path: str):
                                           "name": pl.String,
                                           "start_str": pl.String,
                                           "end_str": pl.String,
-                                          "locked": pl.Boolean})
+                                          "locked": pl.Boolean,
+                                          "tier_lock": pl.String})
 
     return schedule_df
 
@@ -57,7 +59,8 @@ def read_players(abs_path: str):
                                           "mid": pl.String,
                                           "bot": pl.String,
                                           "sup": pl.String,
-                                          "eliminated": pl.Boolean})
+                                          "eliminated": pl.Boolean,
+                                          "tier": pl.String})
         players_df.write_csv(file=abs_path)
     else:
         players_df = pl.read_csv(source=abs_path,
@@ -67,7 +70,8 @@ def read_players(abs_path: str):
                                          "mid": pl.String,
                                          "bot": pl.String,
                                          "sup": pl.String,
-                                         "eliminated": pl.Boolean})
+                                         "eliminated": pl.Boolean,
+                                         "tier": pl.String})
     return players_df
 
 
@@ -145,7 +149,8 @@ def return_player_pricing(abs_path: str,
                                              "position": pl.String,
                                              "playername": pl.String,
                                              "playercost": pl.Int8,
-                                             "suggestedplayercost": pl.Int8})
+                                             "suggestedplayercost": pl.Int8,
+                                             "tier": pl.String})
             return pricing_df
         else:
             return remake_player_pricing(abs_path, player_df)
@@ -159,33 +164,39 @@ def remake_player_pricing(abs_path: str,
     player_df = player_df.filter(pl.col("eliminated") == False)
 
     positions = ["top", "jng", "mid", "bot", "sup"]
+    tiers = ["T1", "T2", "T3", "T4"]
     pricing_df = pl.DataFrame(data=[],
                               schema={"team": pl.String,
                                       "position": pl.String,
                                       "playername": pl.String,
                                       "playercost": pl.Int8,
-                                      "suggestedplayercost": pl.Int8})
-    for position in positions:
-        partial_df = player_df["team", position]
-        for row in partial_df.rows(named=True):
-            if performance_df is None:
-                suggested_cost = 5
-            else:
-                suggested_cost = suggest_cost_for_player(performance_df,
-                                                         row[position],
-                                                         partial_df[position].unique().to_list())
+                                      "suggestedplayercost": pl.Int8,
+                                      "tier": pl.String})
+    for tier in tiers:
+        tier_df = player_df.filter(pl.col("tier") == tier)
+        for position in positions:
+            partial_df = tier_df["team", position]
+            for row in tier_df.rows(named=True):
+                if performance_df is None:
+                    suggested_cost = 5
+                else:
+                    suggested_cost = suggest_cost_for_player(performance_df,
+                                                             row[position],
+                                                             tier_df[position].unique().to_list())
 
-            new_entry_df = pl.DataFrame(data=[[row["team"],
-                                               position,
-                                               row[position],
-                                               5,
-                                               suggested_cost]],
-                                        schema={"team": pl.String,
-                                                "position": pl.String,
-                                                "playername": pl.String,
-                                                "playercost": pl.Int8,
-                                                "suggestedplayercost": pl.Int8})
-            pricing_df = pricing_df.vstack(new_entry_df)
+                new_entry_df = pl.DataFrame(data=[[row["team"],
+                                                   position,
+                                                   row[position],
+                                                   5,
+                                                   suggested_cost,
+                                                   tier]],
+                                            schema={"team": pl.String,
+                                                    "position": pl.String,
+                                                    "playername": pl.String,
+                                                    "playercost": pl.Int8,
+                                                    "suggestedplayercost": pl.Int8,
+                                                    "tier": pl.String})
+                pricing_df = pricing_df.vstack(new_entry_df)
     pricing_df.write_csv(abs_path)
     return pricing_df
 
