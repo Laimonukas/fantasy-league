@@ -232,7 +232,7 @@ def suggest_cost_for_player(performance_df: pl.DataFrame,
                             player_name: str,
                             players_list: list):
 
-    player_performance = performance_df.filter(pl.col("playername") == player_name)
+    player_performance = performance_df.filter(pl.col("playername") == player_name).tail(3)
     if player_performance.is_empty():
         return 5
     else:
