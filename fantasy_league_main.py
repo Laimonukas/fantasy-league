@@ -52,118 +52,118 @@ else:
 
                 st.subheader("Upcoming Series Teams:")
                 selected_series = st.selectbox(label="Series:", options=upcoming_series["name"])
+                if selected_series is not None:
+                    allowed_tier = upcoming_series.row(by_predicate=(pl.col("name") == selected_series), named=True)
+                    allowed_tier = allowed_tier["tier_lock"]
+                    if allowed_tier is None:
+                        allowed_tier_mask = (pl.col("tier").is_in(["T1", "T2", "T3", "T4", None, ""]))
+                    else:
+                        allowed_tier_mask = (pl.col("tier") == allowed_tier)
 
-                allowed_tier = upcoming_series.row(by_predicate=(pl.col("name") == selected_series), named=True)
-                allowed_tier = allowed_tier["tier_lock"]
-                if allowed_tier is None:
-                    allowed_tier_mask = (pl.col("tier").is_in(["T1", "T2", "T3", "T4", None]))
-                else:
-                    allowed_tier_mask = (pl.col("tier") == allowed_tier)
+                    allowed_points = 15
+                    spending_list = [0, 0, 0, 0, 0]
+                    top_col, jng_col, mid_col, bot_col, sup_col = st.columns(5)
+                    with top_col:
+                        player_selection_df = player_cost.filter((pl.col("position") == "top") &
+                                                                 (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                                 allowed_tier_mask)["playername",
+                                                                                    "playercost"]
+                        top_selection = st.selectbox(label="Top:",
+                                                     options=hp.stringify_player_costs(player_selection_df))
+                        if top_selection is not None:
+                            spending_list[0] = int(top_selection[-2])
 
-                allowed_points = 15
-                spending_list = [0, 0, 0, 0, 0]
-                top_col, jng_col, mid_col, bot_col, sup_col = st.columns(5)
-                with top_col:
-                    player_selection_df = player_cost.filter((pl.col("position") == "top") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
-                                                             allowed_tier_mask)["playername",
-                                                                                "playercost"]
-                    top_selection = st.selectbox(label="Top:",
-                                                 options=hp.stringify_player_costs(player_selection_df))
-                    if top_selection is not None:
-                        spending_list[0] = int(top_selection[-2])
+                    with jng_col:
+                        player_selection_df = player_cost.filter((pl.col("position") == "jng") &
+                                                                 (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                                 allowed_tier_mask)["playername",
+                                                                                    "playercost"]
+                        jng_selection = st.selectbox(label="Jng:",
+                                                     options=hp.stringify_player_costs(player_selection_df))
+                        if jng_selection is not None:
+                            spending_list[1] = int(jng_selection[-2])
+                    with mid_col:
+                        player_selection_df = player_cost.filter((pl.col("position") == "mid") &
+                                                                 (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                                 allowed_tier_mask)["playername",
+                                                                                    "playercost"]
+                        mid_selection = st.selectbox(label="mid:",
+                                                     options=hp.stringify_player_costs(player_selection_df))
+                        if mid_selection is not None:
+                            spending_list[2] = int(mid_selection[-2])
+                    with bot_col:
+                        player_selection_df = player_cost.filter((pl.col("position") == "bot") &
+                                                                 (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                                 allowed_tier_mask)["playername",
+                                                                                    "playercost"]
+                        bot_selection = st.selectbox(label="bot:",
+                                                     options=hp.stringify_player_costs(player_selection_df))
+                        if bot_selection is not None:
+                            spending_list[3] = int(bot_selection[-2])
+                    with sup_col:
+                        player_selection_df = player_cost.filter((pl.col("position") == "sup") &
+                                                                 (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
+                                                                 allowed_tier_mask)["playername",
+                                                                                    "playercost"]
+                        sup_selection = st.selectbox(label="sup:",
+                                                     options=hp.stringify_player_costs(player_selection_df))
+                        if sup_selection is not None:
+                            spending_list[4] = int(sup_selection[-2])
 
-                with jng_col:
-                    player_selection_df = player_cost.filter((pl.col("position") == "jng") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
-                                                             allowed_tier_mask)["playername",
-                                                                                "playercost"]
-                    jng_selection = st.selectbox(label="Jng:",
-                                                 options=hp.stringify_player_costs(player_selection_df))
-                    if jng_selection is not None:
-                        spending_list[1] = int(jng_selection[-2])
-                with mid_col:
-                    player_selection_df = player_cost.filter((pl.col("position") == "mid") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
-                                                             allowed_tier_mask)["playername",
-                                                                                "playercost"]
-                    mid_selection = st.selectbox(label="mid:",
-                                                 options=hp.stringify_player_costs(player_selection_df))
-                    if mid_selection is not None:
-                        spending_list[2] = int(mid_selection[-2])
-                with bot_col:
-                    player_selection_df = player_cost.filter((pl.col("position") == "bot") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
-                                                             allowed_tier_mask)["playername",
-                                                                                "playercost"]
-                    bot_selection = st.selectbox(label="bot:",
-                                                 options=hp.stringify_player_costs(player_selection_df))
-                    if bot_selection is not None:
-                        spending_list[3] = int(bot_selection[-2])
-                with sup_col:
-                    player_selection_df = player_cost.filter((pl.col("position") == "sup") &
-                                                             (pl.col("playercost") <= (allowed_points - sum(spending_list))) &
-                                                             allowed_tier_mask)["playername",
-                                                                                "playercost"]
-                    sup_selection = st.selectbox(label="sup:",
-                                                 options=hp.stringify_player_costs(player_selection_df))
-                    if sup_selection is not None:
-                        spending_list[4] = int(sup_selection[-2])
+                    st.text(f"Remaining points: {allowed_points - sum(spending_list)}")
 
-                st.text(f"Remaining points: {allowed_points - sum(spending_list)}")
+                    mult_col, mult_player_col = st.columns(2)
 
-                mult_col, mult_player_col = st.columns(2)
+                    with mult_col:
+                        mult_selection = st.selectbox(label="Modifier:",
+                                                      options=settings_json["modifiers"].keys())
 
-                with mult_col:
-                    mult_selection = st.selectbox(label="Modifier:",
-                                                  options=settings_json["modifiers"].keys())
+                    with mult_player_col:
+                        if [v is None for v in [top_selection,
+                                                jng_selection,
+                                                mid_selection,
+                                                bot_selection,
+                                                sup_selection]].count(True) > 0:
+                            st.warning("Not all positions filled for multiplier")
+                        else:
+                            mult_player_selection = st.selectbox(label="For player:",
+                                                                 options=[top_selection[:-4],
+                                                                          jng_selection[:-4],
+                                                                          mid_selection[:-4],
+                                                                          bot_selection[:-4],
+                                                                          sup_selection[:-4],
+                                                                          None])
 
-                with mult_player_col:
                     if [v is None for v in [top_selection,
                                             jng_selection,
                                             mid_selection,
                                             bot_selection,
                                             sup_selection]].count(True) > 0:
-                        st.warning("Not all positions filled for multiplier")
-                    else:
-                        mult_player_selection = st.selectbox(label="For player:",
-                                                             options=[top_selection[:-4],
-                                                                      jng_selection[:-4],
-                                                                      mid_selection[:-4],
-                                                                      bot_selection[:-4],
-                                                                      sup_selection[:-4],
-                                                                      None])
+                        st.warning("Not all positions filled, can't save.")
+                    elif selected_series is not None:
+                        if st.button(label="Save selection"):
 
-                if [v is None for v in [top_selection,
-                                        jng_selection,
-                                        mid_selection,
-                                        bot_selection,
-                                        sup_selection]].count(True) > 0:
-                    st.warning("Not all positions filled, can't save.")
-                elif selected_series is not None:
-                    if st.button(label="Save selection"):
+                            new_event_row_df = pl.DataFrame(data=[[selected_series,
+                                                                   top_selection[:-4],
+                                                                   jng_selection[:-4],
+                                                                   mid_selection[:-4],
+                                                                   bot_selection[:-4],
+                                                                   sup_selection[:-4],
+                                                                   mult_selection,
+                                                                   mult_player_selection]],
+                                                            schema={"eventname": pl.String,
+                                                                    "top": pl.String,
+                                                                    "jng": pl.String,
+                                                                    "mid": pl.String,
+                                                                    "bot": pl.String,
+                                                                    "sup": pl.String,
+                                                                    "modifier": pl.String,
+                                                                    "player": pl.String})
 
-                        new_event_row_df = pl.DataFrame(data=[[selected_series,
-                                                               top_selection[:-4],
-                                                               jng_selection[:-4],
-                                                               mid_selection[:-4],
-                                                               bot_selection[:-4],
-                                                               sup_selection[:-4],
-                                                               mult_selection,
-                                                               mult_player_selection]],
-                                                        schema={"eventname": pl.String,
-                                                                "top": pl.String,
-                                                                "jng": pl.String,
-                                                                "mid": pl.String,
-                                                                "bot": pl.String,
-                                                                "sup": pl.String,
-                                                                "modifier": pl.String,
-                                                                "player": pl.String})
-
-                        event_fantasy_teams = event_fantasy_teams.filter(pl.col("eventname") != selected_series)
-                        event_fantasy_teams = event_fantasy_teams.vstack(new_event_row_df)
-                        event_fantasy_teams.write_csv(os.path.abspath(f"data/teams/{st.session_state['name']}_teams.csv"))
-                        st.rerun()
+                            event_fantasy_teams = event_fantasy_teams.filter(pl.col("eventname") != selected_series)
+                            event_fantasy_teams = event_fantasy_teams.vstack(new_event_row_df)
+                            event_fantasy_teams.write_csv(os.path.abspath(f"data/teams/{st.session_state['name']}_teams.csv"))
+                            st.rerun()
 
             with other_players_tab:
                 results = hp.return_fantasy_teams_by_stage(os.path.abspath("data/"))
