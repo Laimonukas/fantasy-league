@@ -48,7 +48,7 @@ else:
             your_fantasy_team_tab, other_players_tab = st.tabs(["Your Fantasy Team", "Other Fantasy Teams"])
             with your_fantasy_team_tab:
                 st.subheader("Previous fantasy teams:")
-                st.dataframe(event_fantasy_teams)
+                st.dataframe(event_fantasy_teams.tail())
 
                 st.subheader("Upcoming Series Teams:")
                 selected_series = st.selectbox(label="Series:", options=upcoming_series["name"])
