@@ -58,13 +58,14 @@
                                      "total cs":  0.01,
                                      "damagetochampions": 0.01,
                                      "firstblood": 10}}},
- "modifiers": {"firstblood": [1.75, 0.75],
+ "modifiers": {"firstblood": [3.0, 0.8],
                "teemo": [100000, 0],
-               "deathless": [1.75, 0.75],
-               "triple+": [1.5, 0.75],
-               "dmg 40k+": [1.25, 0.85],
-               "dmg 100k+": [2.25, 0.5],
-               "visionary(200+)": [2.0, 0.75],
-               "early loser(-1k gold@10)": [1.5, 0.75],
-               "cs 350+": [1.75, 0.75]}
+               "deathless": [3.0, 0.8],
+               "triple+": [3.5, 0.8],
+               "dmg 40k+": [3.5, 0.8],
+               "dmg 100k+": [8.0, 0.8],
+               "visionary(200+)": [8.0, 0.8],
+               "early loser(-1k gold@10)": [3.5, 0.8],
+               "cs 350+": [3.5, 0.8],
+               "kda 6+": [3.5, 0.8]}
 }
