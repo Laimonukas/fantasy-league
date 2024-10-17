@@ -406,8 +406,7 @@ def check_for_modifier(modifier_type: str,
         case "cs 350+":
             mask = player_matches["total cs"] >= 350
         case "kda 6+":
-            deaths = 1 if player_matches["deaths"] == 0 else player_matches["deaths"]
-            mask = ((player_matches["kills"] + player_matches["assists"]) / player_matches["deaths"]) >= 6
+            mask = ((player_matches["kills"] + player_matches["assists"]) / (1 if (player_matches["deaths"] == 0) else player_matches["deaths"])) >= 6
 
     mask = mask.map_elements(lambda x: modifier_dict[modifier_type][0] if x else modifier_dict[modifier_type][1],
                              skip_nulls=False)
