@@ -254,7 +254,7 @@ else:
                     filtered_matches_df = filtered_matches_df.filter(pl.col("teamname") == team_option)
                 case "Tier":
                     tier_option = st.selectbox(label="Tier to filter for:",
-                                               options=player_cost["tier"])
+                                               options=player_cost["tier"].unique())
                     filtered_players_df = player_cost.filter(pl.col("tier") == tier_option)
                     filtered_matches_df = filtered_matches_df.filter(pl.col("playername").is_in(filtered_players_df["playername"]))
 
