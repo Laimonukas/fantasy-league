@@ -212,7 +212,8 @@ else:
                                                   "Date",
                                                   "Player",
                                                   "Position",
-                                                  "Team"])
+                                                  "Team",
+                                                  "Tier"])
 
             match filter_option:
                 case "Stage":
@@ -251,6 +252,11 @@ else:
                     team_option = st.selectbox(label="Team to filter for:",
                                                options=teams)
                     filtered_matches_df = filtered_matches_df.filter(pl.col("teamname") == team_option)
+                case "Tier":
+                    tier_option = st.selectbox(label="Tier to filter for:",
+                                               options=player_cost["tier"])
+                    filtered_players_df = player_cost.filter(pl.col("tier") == tier_option)
+                    filtered_matches_df = filtered_matches_df.filter(pl.col("playername").is_in(filtered_players_df["playername"]))
 
             performance_data = hp.calculate_performance(filtered_matches_df,
                                                         settings_json["multipliers"])
