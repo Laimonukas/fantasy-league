@@ -256,7 +256,14 @@ else:
                     tier_option = st.selectbox(label="Tier to filter for:",
                                                options=player_cost["tier"].unique())
                     filtered_players_df = player_cost.filter(pl.col("tier") == tier_option)
-                    filtered_matches_df = filtered_matches_df.filter(pl.col("playername").is_in(filtered_players_df["playername"]))
+                    
+                    tier_pos_option = st.selectbox(label="Position to filter for:",
+                                                   options=["top", "jng", "mid", "bot", "sup", "all"])
+                    
+                    if tier_pos_option == "all":
+                        filtered_matches_df = filtered_matches_df.filter(pl.col("playername").is_in(filtered_players_df["playername"]))
+                    else:
+                        filtered_matches_df = filtered_matches_df.filter(pl.col("playername").is_in(filtered_players_df.filter(pl.col("position") == tier_pos_option)["playername"]))
 
             performance_data = hp.calculate_performance(filtered_matches_df,
                                                         settings_json["multipliers"])
